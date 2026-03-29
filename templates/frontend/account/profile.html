@@ -1,0 +1,278 @@
+{% extends 'frontend/base.html' %}
+{% load image_tags %}
+
+{% block title %}Profil - Wholesale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            {% include 'frontend/account/_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Profile Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-person-gear"></i> Profil ma'lumotlari</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Ism</label>
+                                <input type="text" name="name" class="form-control" value="{{ profile.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Telefon</label>
+                                <input type="text" name="phone" class="form-control" value="{{ profile.phone }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Avatar</label>
+                                <input type="file" name="avatar" class="form-control" accept="image/*">
+                                {% if profile.avatar %}
+                                <small class="text-muted mt-1 d-block">Hozirgi rasm mavjud. Yangi rasm yuklasangiz eskisi almashtiriladi.</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Saqlash
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Saved Addresses -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Manzillarim</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+                        <i class="bi bi-plus"></i> Yangi manzil
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if locations %}
+                    <div class="row g-3">
+                        {% for loc in locations %}
+                        <div class="col-md-6" id="location-card-{{ loc.id }}">
+                            <div class="card h-100 border">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title mb-1">
+                                                <i class="bi bi-geo-alt text-primary"></i>
+                                                {{ loc.location|default:"Manzil ko'rsatilmagan" }}
+                                            </h6>
+                                            <p class="card-text text-muted small mb-0">
+                                                {% if loc.floor %}Qavat: {{ loc.floor }}{% endif %}
+                                                {% if loc.apartment %} | Xonadon: {{ loc.apartment }}{% endif %}
+                                            </p>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger delete-location-btn" data-location-id="{{ loc.id }}" title="O'chirish">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-geo-alt display-4 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">Hali manzil qo'shilmagan</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-danger border-opacity-25 shadow-sm">
+                <div class="card-header bg-danger bg-opacity-10">
+                    <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle"></i> Xavfli zona</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Hisobni o'chirish</h6>
+                            <p class="text-muted small mb-0">Hisobingiz butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.</p>
+                        </div>
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="bi bi-trash"></i> O'chirish
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Location Modal -->
+<div class="modal fade" id="addLocationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-geo-alt"></i> Yangi manzil qo'shish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addLocationForm">
+                    <div class="mb-3">
+                        <label class="form-label">Manzil <span class="text-danger">*</span></label>
+                        <input type="text" name="location" class="form-control" placeholder="Shahar, ko'cha, uy" required>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Qavat</label>
+                            <input type="text" name="floor" class="form-control" placeholder="Masalan: 3">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Xonadon</label>
+                            <input type="text" name="apartment" class="form-control" placeholder="Masalan: 12">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-6">
+                            <label class="form-label">Latitude</label>
+                            <input type="text" name="latitude" class="form-control" placeholder="41.2995">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Longitude</label>
+                            <input type="text" name="longitude" class="form-control" placeholder="69.2401">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" id="saveLocationBtn">
+                    <i class="bi bi-check-lg"></i> Saqlash
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle"></i> Hisobni o'chirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Hisobingizni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi!</p>
+                <p class="text-muted small">Tasdiqlash uchun parolingizni kiriting:</p>
+                <form id="deleteAccountForm">
+                    <div class="mb-3">
+                        <input type="password" name="password" class="form-control" placeholder="Parolingiz" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash"></i> Ha, o'chirish
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manzil qo'shish
+    document.getElementById('saveLocationBtn').addEventListener('click', function() {
+        const form = document.getElementById('addLocationForm');
+        const formData = new FormData(form);
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saqlanmoqda...';
+
+        fetch('{% url "frontend:add_location" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                showToast('Manzil qo\'shildi', 'success');
+                location.reload();
+            } else {
+                showToast(data.message || 'Xatolik yuz berdi', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Saqlash';
+            }
+        })
+        .catch(() => {
+            showToast('Server bilan bog\'lanishda xatolik', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Saqlash';
+        });
+    });
+
+    // Manzil o'chirish
+    document.querySelectorAll('.delete-location-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!confirm('Manzilni o\'chirmoqchimisiz?')) return;
+
+            const locationId = this.dataset.locationId;
+            fetch(`/account/location/delete/${locationId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.error) {
+                    const card = document.getElementById(`location-card-${locationId}`);
+                    if (card) card.remove();
+                    showToast('Manzil o\'chirildi', 'success');
+                } else {
+                    showToast(data.message || 'Xatolik yuz berdi', 'danger');
+                }
+            });
+        });
+    });
+
+    // Hisobni o'chirish
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const form = document.getElementById('deleteAccountForm');
+        const formData = new FormData(form);
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> O\'chirilmoqda...';
+
+        fetch('{% url "frontend:delete_account" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                showToast('Hisobingiz o\'chirildi', 'success');
+                window.location.href = '{% url "frontend:home" %}';
+            } else {
+                showToast(data.message || 'Parol noto\'g\'ri', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-trash"></i> Ha, o\'chirish';
+            }
+        })
+        .catch(() => {
+            showToast('Server bilan bog\'lanishda xatolik', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-trash"></i> Ha, o\'chirish';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wholesale - Online Do'kon{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'frontend:home' %}">
+                <i class="bi bi-shop"></i> Wholesale
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Search Form -->
+                <form class="d-flex mx-auto my-2 my-lg-0" action="{% url 'frontend:product_list' %}" method="get" style="max-width: 400px; width: 100%;">
+                    <div class="input-group">
+                        <input class="form-control" type="search" name="search" placeholder="Qidirish..." value="{{ search|default:'' }}">
+                        <button class="btn btn-light" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Categories Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-grid"></i> Kategoriyalar
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% for cat in nav_categories %}
+                            <li><a class="dropdown-item" href="{% url 'frontend:category' cat.id %}">{{ cat.name_uz|default:cat.name_en }}</a></li>
+                            {% empty %}
+                            <li><a class="dropdown-item" href="{% url 'frontend:product_list' %}">Barcha mahsulotlar</a></li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'frontend:product_list' %}">Barchasini ko'rish</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Wishlist -->
+                    {% if is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'frontend:wishlist' %}">
+                            <i class="bi bi-heart"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Cart -->
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'frontend:cart' %}">
+                            <i class="bi bi-cart3"></i>
+                            {% if cart_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-badge">
+                                {{ cart_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    <!-- Account -->
+                    {% if is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'frontend:profile' %}"><i class="bi bi-person me-2"></i>Profil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'frontend:orders' %}"><i class="bi bi-bag me-2"></i>Buyurtmalarim</a></li>
+                            <li><a class="dropdown-item" href="{% url 'frontend:wishlist' %}"><i class="bi bi-heart me-2"></i>Sevimlilar</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'frontend:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Chiqish</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'frontend:login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Kirish
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="min-vh-100">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-shop"></i> Wholesale</h5>
+                    <p class="text-muted">Eng sifatli mahsulotlar eng yaxshi narxlarda. Tez va ishonchli yetkazib berish xizmati.</p>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">Havolalar</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'frontend:home' %}" class="text-muted text-decoration-none">Bosh sahifa</a></li>
+                        <li><a href="{% url 'frontend:product_list' %}" class="text-muted text-decoration-none">Mahsulotlar</a></li>
+                        <li><a href="{% url 'frontend:cart' %}" class="text-muted text-decoration-none">Savatcha</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Kategoriyalar</h6>
+                    <ul class="list-unstyled">
+                        {% for cat in nav_categories|slice:":4" %}
+                        <li><a href="{% url 'frontend:category' cat.id %}" class="text-muted text-decoration-none">{{ cat.name_uz|default:cat.name_en }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Aloqa</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li><i class="bi bi-telephone me-2"></i> +998 90 123 45 67</li>
+                        <li><i class="bi bi-envelope me-2"></i> info@wholesale.uz</li>
+                        <li><i class="bi bi-geo-alt me-2"></i> Toshkent, O'zbekiston</li>
+                    </ul>
+                    <div class="mt-3">
+                        <a href="#" class="text-muted me-3"><i class="bi bi-telegram fs-5"></i></a>
+                        <a href="#" class="text-muted me-3"><i class="bi bi-instagram fs-5"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-facebook fs-5"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="text-center text-muted">
+                <small>&copy; 2024 Wholesale. Barcha huquqlar himoyalangan.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

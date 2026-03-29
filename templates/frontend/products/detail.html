@@ -1,0 +1,227 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load image_tags %}
+
+{% block title %}{{ product.name_uz|default:product.name_en }} - Wholesale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'frontend:home' %}">Bosh sahifa</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'frontend:product_list' %}">Mahsulotlar</a></li>
+            {% if product.category %}
+            <li class="breadcrumb-item"><a href="{% url 'frontend:category' product.category.id %}">{{ product.category.name_uz|default:product.category.name_en }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ product.name_uz|default:product.name_en }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <!-- Main Image -->
+                <div class="position-relative">
+                    {% if product.images and product.images.0 %}
+                    <img src="{{ product.images.0.image|fix_image:base_url }}" class="card-img-top" alt="{{ product.name_uz }}" id="mainImage" style="height: 400px; object-fit: contain; background: #f8f9fa;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="bi bi-image display-1 text-muted"></i>
+                    </div>
+                    {% endif %}
+
+                    <!-- Discount Badge -->
+                    {% if product.discount and product.discount > 0 %}
+                    <span class="position-absolute top-0 start-0 m-3 badge bg-danger fs-5">-{{ product.discount }}%</span>
+                    {% endif %}
+                </div>
+
+                <!-- Thumbnails -->
+                {% if product.images and product.images|length > 1 %}
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% for img in product.images %}
+                        <div class="col-3">
+                            <img src="{{ img.image|fix_image:base_url }}" class="img-thumbnail product-thumbnail" alt="Thumbnail" onclick="changeMainImage('{{ img.image|fix_image:base_url }}')" style="height: 80px; object-fit: cover; cursor: pointer;">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <!-- Category & Name -->
+                    {% if product.category %}
+                    <a href="{% url 'frontend:category' product.category.id %}" class="badge bg-primary text-decoration-none mb-2">
+                        {{ product.category.name_uz|default:product.category.name_en }}
+                    </a>
+                    {% endif %}
+                    <h2 class="fw-bold">{{ product.name_uz|default:product.name_en }}</h2>
+
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        <span class="text-warning">
+                            {% for i in "12345" %}
+                            {% if forloop.counter <= product.average_rank|default:0 %}
+                            <i class="bi bi-star-fill"></i>
+                            {% else %}
+                            <i class="bi bi-star"></i>
+                            {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="text-muted ms-2">({{ product.average_rank|floatformat:1|default:"0" }})</span>
+                        <span class="text-muted ms-2">| {{ product.sold_count }} ta sotildi</span>
+                    </div>
+
+                    <!-- Price -->
+                        <div class="mb-4">
+                            {% if product.discount and product.discount > 0 %}
+                            <span class="text-decoration-line-through text-muted fs-5">{{ product.price|floatformat:0 }} so'm</span>
+                            <span class="fw-bold text-danger fs-3 ms-2">
+                                {{ product.discounted_price|floatformat:0 }} so'm
+                            </span>
+                            <span class="badge bg-danger ms-1">-{{ product.discount }}%</span>
+                            {% else %}
+                            <span class="fw-bold text-primary fs-3">{{ product.price|floatformat:0 }} so'm</span>
+                            {% endif %}
+                            {% if product.worth %}
+                            <span class="text-muted ms-2">/ {{ product.worth }}</span>
+                            {% endif %}
+                        </div>
+                    <!-- Stock Status -->
+                    <div class="mb-4">
+                        {% if product.quantity > 0 %}
+                        <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Mavjud ({{ product.quantity }} dona)</span>
+                        {% else %}
+                        <span class="badge bg-danger fs-6"><i class="bi bi-x-circle"></i> Tugagan</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quantity & Add to Cart -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Miqdor:</label>
+                        <div class="input-group" style="max-width: 200px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="decrementQuantity()">-</button>
+                            <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="{{ product.quantity }}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="incrementQuantity()">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn btn-primary btn-lg flex-grow-1 add-to-cart-btn"
+                                data-product-id="{{ product.id }}"
+                                {% if product.quantity <= 0 %}disabled{% endif %}>
+                            <i class="bi bi-cart-plus"></i> Savatchaga qo'shish
+                        </button>
+                        {% if is_authenticated %}
+                        <button class="btn btn-outline-danger btn-lg wishlist-btn" data-product-id="{{ product.id }}">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Info List -->
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><i class="bi bi-truck me-2"></i> Tez yetkazib berish</li>
+                        <li class="mb-2"><i class="bi bi-shield-check me-2"></i> Sifat kafolati</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    {% if product.description_uz or product.description_en %}
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Mahsulot haqida</h5>
+        </div>
+        <div class="card-body">
+            {{ product.description_uz|default:product.description_en|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-5">
+        <h4 class="fw-bold mb-4">O'xshash mahsulotlar</h4>
+        <div class="row g-4">
+            {% for rel_product in related_products %}
+            <div class="col-6 col-md-3">
+                {% include 'frontend/partials/product_card.html' with product=rel_product %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeMainImage(src) {
+    document.getElementById('mainImage').src = src;
+}
+
+function incrementQuantity() {
+    var input = document.getElementById('quantity');
+    var max = parseInt(input.max) || 999;
+    if (parseInt(input.value) < max) {
+        input.value = parseInt(input.value) + 1;
+    }
+}
+
+function decrementQuantity() {
+    var input = document.getElementById('quantity');
+    if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+    }
+}
+
+// Override add to cart for detail page (with quantity)
+document.addEventListener('DOMContentLoaded', function() {
+    const detailAddBtn = document.querySelector('.add-to-cart-btn[data-product-id="{{ product.id }}"]');
+    if (detailAddBtn) {
+        detailAddBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productId = this.dataset.productId;
+            const quantity = document.getElementById('quantity').value;
+            addToCartWithQuantity(productId, quantity);
+        });
+    }
+});
+
+function addToCartWithQuantity(productId, quantity) {
+    fetch('{% url "frontend:cart_add" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: 'product_id=' + productId + '&quantity=' + quantity
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showToast(data.message, 'danger');
+        } else {
+            showToast(data.message, 'success');
+            updateCartBadge();
+        }
+    })
+    .catch(error => {
+        showToast('Xatolik yuz berdi', 'danger');
+    });
+}
+</script>
+{% endblock %}

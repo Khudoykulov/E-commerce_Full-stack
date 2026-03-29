@@ -1,0 +1,148 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load image_tags %}
+
+{% block title %}Bosh sahifa - Wholesale{% endblock %}
+
+{% block content %}
+<!-- Hero Banner Carousel -->
+{% if banners %}
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        {% for banner in banners %}
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></button>
+        {% endfor %}
+    </div>
+    <div class="carousel-inner">
+        {% for banner in banners %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <img src="{{ banner.image|fix_image:base_url }}" class="d-block w-100" alt="Banner" style="height: 400px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block">
+                <a href="{% url 'frontend:product_list' %}" class="btn btn-primary btn-lg">Xarid qilish</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
+{% else %}
+<!-- Default Hero -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1>Sifatli mahsulotlar, uyingizgacha yetkazamiz</h1>
+                <p class="lead mb-4">Eng yaxshi narxlar, tez yetkazib berish va 100% kafolat</p>
+                <a href="{% url 'frontend:product_list' %}" class="btn btn-accent btn-lg">
+                    Xarid qilish <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container py-5">
+    <!-- Categories Section -->
+    {% if categories %}
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Kategoriyalar</h2>
+            <a href="{% url 'frontend:product_list' %}" class="btn btn-outline-primary btn-sm">Barchasini ko'rish</a>
+        </div>
+        <div class="row g-3">
+{% for category in categories|slice:":8" %}
+<div class="col-6 col-md-4 col-lg-3">
+    <a href="{% url 'frontend:category' category.id %}" class="text-decoration-none">
+        <div class="card h-100 category-card border-0 shadow-sm">
+            <div class="card-img-top d-flex align-items-center justify-content-center overflow-hidden"
+                 style="height: 150px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+
+{% if category.image %}
+    <img src="{{ category.image|fix_image:base_url }}"
+         alt="{{ category.name }}"
+         style="width: 100%; height: 100%; object-fit: cover;">
+{% else %}
+    <i class="bi bi-grid-3x3-gap"
+       style="font-size: 3.5rem; color: white;"></i>
+{% endif %}
+
+            </div>
+            <div class="card-body text-center">
+                <h6 class="card-title text-dark mb-0">{{ category.name_en }}</h6>
+            </div>
+        </div>
+    </a>
+</div>
+{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Best Selling Products -->
+    {% if best_products %}
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Eng ko'p sotilgan</h2>
+            <a href="{% url 'frontend:product_list' %}?ordering=-sold_count" class="btn btn-outline-primary btn-sm">Barchasini ko'rish</a>
+        </div>
+        <div class="row g-4">
+            {% for product in best_products %}
+            <div class="col-6 col-md-4 col-lg-3">
+                {% include 'frontend/partials/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Features Section -->
+    <section class="mb-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <i class="bi bi-truck"></i>
+                    <h5>Tez yetkazib berish</h5>
+                    <p>Buyurtmangizni tez va xavfsiz yetkazamiz</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <i class="bi bi-shield-check"></i>
+                    <h5>Kafolatlangan sifat</h5>
+                    <p>Barcha mahsulotlar sifat kafolati bilan</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <i class="bi bi-headset"></i>
+                    <h5>24/7 Qo'llab-quvvatlash</h5>
+                    <p>Doimo aloqadamiz va yordam beramiz</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Products -->
+    {% if new_products %}
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Yangi mahsulotlar</h2>
+            <a href="{% url 'frontend:product_list' %}?ordering=-id" class="btn btn-outline-primary btn-sm">Barchasini ko'rish</a>
+        </div>
+        <div class="row g-4">
+            {% for product in new_products %}
+            <div class="col-6 col-md-4 col-lg-3">
+                {% include 'frontend/partials/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

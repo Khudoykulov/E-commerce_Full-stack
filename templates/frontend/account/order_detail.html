@@ -1,0 +1,138 @@
+{% extends 'frontend/base.html' %}
+{% load image_tags %}
+
+{% block title %}Buyurtma #{{ order.id }} - Wholesale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'frontend:profile' %}">Profil</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'frontend:orders' %}">Buyurtmalarim</a></li>
+            <li class="breadcrumb-item active">Buyurtma #{{ order.id }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Order Info -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Buyurtma #{{ order.id }}</h5>
+                    {% if order.status == 'Tayyorlanmoqda' %}
+                    <span class="badge bg-warning fs-6">{{ order.status }}</span>
+                    {% elif order.status == 'Yetkazilmoqda' %}
+                    <span class="badge bg-info fs-6">{{ order.status }}</span>
+                    {% elif order.status == 'Yetkazildi' %}
+                    <span class="badge bg-success fs-6">{{ order.status }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-6">{{ order.status }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <strong>Sana:</strong> {{ order.created_date|date:"d.m.Y H:i" }}
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>To'lov:</strong>
+                            {% if order.payment_confirmed %}
+                            <span class="text-success"><i class="bi bi-check-circle"></i> Tasdiqlangan</span>
+                            {% elif order.payment_confirmed == False %}
+                            <span class="text-danger"><i class="bi bi-x-circle"></i> Rad etilgan</span>
+                            {% else %}
+                            <span class="text-muted"><i class="bi bi-clock"></i> Kutilmoqda</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if order.promo %}
+                    <div class="alert alert-success py-2">
+                        <i class="bi bi-tag"></i> Promo kod ishlatildi: <strong>{{ order.promo }}</strong>
+                    </div>
+                    {% endif %}
+
+                    <!-- Order Items -->
+                    <h6 class="mt-4 mb-3">Mahsulotlar:</h6>
+                    {% if order.items_data %}
+                    {% for item in order.items_data %}
+                    <div class="d-flex align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="flex-shrink-0" style="width: 60px;">
+                            {% if item.product_image %}
+                            <img src="{{ item.product_image|fix_image:base_url }}" class="img-fluid rounded" alt="">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 60px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ item.product_name }}</h6>
+                            <small class="text-muted">{{ item.quantity }} dona</small>
+                        </div>
+                        <div class="fw-bold">
+                            {{ item.price }} so'm
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">Mahsulot ma'lumotlari mavjud emas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-lg-4">
+            <!-- Delivery Address -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-geo-alt"></i> Yetkazib berish manzili</h6>
+                </div>
+                <div class="card-body">
+                    {% if order.location_data %}
+                    <p class="mb-1">{{ order.location_data.location }}</p>
+                    {% if order.location_data.floor %}
+                    <p class="mb-1 text-muted small">Qavat: {{ order.location_data.floor }}</p>
+                    {% endif %}
+                    {% if order.location_data.apartment %}
+                    <p class="mb-0 text-muted small">Xonadon: {{ order.location_data.apartment }}</p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted mb-0">Manzil ma'lumotlari mavjud emas</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-receipt"></i> Buyurtma xulosasi</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Mahsulotlar:</span>
+                        <span>{% if order.items_data %}{{ order.items_data|length }}{% else %}0{% endif %} ta</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Yetkazib berish:</span>
+                        <span class="text-success">Bepul</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold fs-5">Jami:</span>
+                        <span class="fw-bold fs-5 text-primary">{{ order.get_amount|floatformat:0 }} so'm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'frontend:orders' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Buyurtmalarga qaytish
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load image_tags %}
+
+{% block title %}Buyurtma berish - Wholesale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="bi bi-credit-card"></i> Buyurtma berish</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-4">
+            <!-- Checkout Form -->
+            <div class="col-lg-8">
+                <!-- Delivery Address -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Yetkazib berish manzili</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if locations %}
+                        <div class="mb-3">
+                            <label class="form-label">Saqlangan manzillar</label>
+                            {% for loc in locations %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="location_id" id="loc{{ loc.id }}" value="{{ loc.id }}" {% if forloop.first %}checked{% endif %}>
+                                <label class="form-check-label" for="loc{{ loc.id }}">
+                                    {{ loc.location }}
+                                    {% if loc.floor %} | Qavat: {{ loc.floor }}{% endif %}
+                                    {% if loc.apartment %} | Xonadon: {{ loc.apartment }}{% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="location_id" id="newLocationRadio" value="">
+                                <label class="form-check-label" for="newLocationRadio">
+                                    <strong>+ Yangi manzil qo'shish</strong>
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- New Address Form -->
+                        <div id="newAddressForm" class="{% if locations %}d-none{% endif %}">
+                            <input type="hidden" name="new_location" id="newLocationFlag" value="{% if not locations %}1{% endif %}">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Manzil *</label>
+                                    <input type="text" name="address" class="form-control" placeholder="Shahar, ko'cha, uy" {% if not locations %}required{% endif %}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Qavat</label>
+                                    <input type="text" name="floor" class="form-control" placeholder="Qavat raqami">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Xonadon</label>
+                                    <input type="text" name="apartment" class="form-control" placeholder="Xonadon raqami">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="text" name="latitude" class="form-control" placeholder="41.311081">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="text" name="longitude" class="form-control" placeholder="69.240562">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promo Code -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-tag"></i> Promo kod</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <input type="text" name="promo" id="promoInput" class="form-control" placeholder="Promo kodni kiriting">
+                            <button class="btn btn-outline-primary" type="button" id="checkPromoBtn">Tekshirish</button>
+                        </div>
+                        <div id="promoResult" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <!-- Order Items Preview -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-bag"></i> Buyurtma mahsulotlari</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                        <div class="d-flex align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="flex-shrink-0" style="width: 60px;">
+                                {% if item.product.images and item.product.images.0 %}
+                                <img src="{{ item.product.images.0.image|fix_image:base_url }}" class="img-fluid rounded" alt="">
+                                {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 60px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">{{ item.product.name_uz|default:item.product.name_en }}</h6>
+                                <small class="text-muted">{{ item.quantity }} x {{ item.product.price|floatformat:0 }} so'm</small>
+                            </div>
+                            <div class="fw-bold">
+                                {{ item.get_amount|floatformat:0 }} so'm
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Buyurtma xulosasi</h5>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Mahsulotlar ({{ cart_items|length }})</span>
+                            <span>{{ cart_total|floatformat:0 }} so'm</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Yetkazib berish</span>
+                            <span class="text-success">Bepul</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none !important;">
+                            <span class="text-muted">Chegirma</span>
+                            <span class="text-success" id="discountAmount">-0 so'm</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fw-bold fs-5">Jami:</span>
+                            <span class="fw-bold fs-5 text-primary" id="orderTotal">{{ cart_total|floatformat:0 }} so'm</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> Buyurtma berish
+                        </button>
+
+                        <p class="text-muted small mt-3 mb-0 text-center">
+                            Buyurtma berish tugmasini bosish orqali siz shartlarimizga rozilik bildirasiz
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle new address form
+    const radios = document.querySelectorAll('input[name="location_id"]');
+    const newAddressForm = document.getElementById('newAddressForm');
+    const newLocationFlag = document.getElementById('newLocationFlag');
+
+    if (radios.length > 0) {
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.id === 'newLocationRadio') {
+                    newAddressForm.classList.remove('d-none');
+                    newLocationFlag.value = '1';
+                    newAddressForm.querySelector('input[name="address"]').required = true;
+                } else {
+                    newAddressForm.classList.add('d-none');
+                    newLocationFlag.value = '';
+                    newAddressForm.querySelector('input[name="address"]').required = false;
+                }
+            });
+        });
+    }
+
+    // Check promo code
+    document.getElementById('checkPromoBtn').addEventListener('click', function() {
+        const promo = document.getElementById('promoInput').value;
+        if (!promo) {
+            document.getElementById('promoResult').innerHTML = '<span class="text-danger">Promo kodni kiriting</span>';
+            return;
+        }
+
+        fetch('{% url "frontend:check_promo" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: 'promo=' + encodeURIComponent(promo)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('promoResult').innerHTML = '<span class="text-danger">' + data.message + '</span>';
+            } else {
+                document.getElementById('promoResult').innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Promo kod qabul qilindi!</span>';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

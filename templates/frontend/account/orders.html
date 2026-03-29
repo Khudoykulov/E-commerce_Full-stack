@@ -1,0 +1,114 @@
+{% extends 'frontend/base.html' %}
+{% load image_tags %}
+
+{% block title %}Buyurtmalarim - Wholesale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            {% include 'frontend/account/_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-bag"></i> Buyurtmalarim</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sana</th>
+                                    <th>Mahsulotlar</th>
+                                    <th>Jami</th>
+                                    <th>Holat</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td><strong>#{{ order.id }}</strong></td>
+                                    <td>{{ order.created_date|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        {% if order.items_data %}
+                                        {{ order.items_data|length }} ta mahsulot
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ order.get_amount|floatformat:0 }} so'm</strong></td>
+                                    <td>
+                                        {% if order.status == 'Tayyorlanmoqda' %}
+                                        <span class="badge bg-warning">{{ order.status }}</span>
+                                        {% elif order.status == 'Yetkazilmoqda' %}
+                                        <span class="badge bg-info">{{ order.status }}</span>
+                                        {% elif order.status == 'Yetkazildi' %}
+                                        <span class="badge bg-success">{{ order.status }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ order.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'frontend:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if total_pages > 1 %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ current_page|add:'-1' }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for i in total_pages|make_list %}
+                            {% with page_num=forloop.counter %}
+                            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                                <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                            {% endwith %}
+                            {% endfor %}
+
+                            {% if has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ current_page|add:'1' }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-bag-x display-1 text-muted"></i>
+                        <h5 class="mt-3">Hali buyurtma yo'q</h5>
+                        <p class="text-muted">Birinchi buyurtmangizni bering!</p>
+                        <a href="{% url 'frontend:product_list' %}" class="btn btn-primary">
+                            <i class="bi bi-bag"></i> Xarid qilish
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

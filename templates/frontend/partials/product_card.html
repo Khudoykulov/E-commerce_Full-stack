@@ -1,0 +1,73 @@
+<!-- Product Card Component -->
+{% load image_tags %}
+<div class="card h-100 product-card border-0 shadow-sm">
+    <a href="{% url 'frontend:product_detail' product.id %}" class="text-decoration-none">
+        {% if product.images and product.images.0.image %}
+        <img src="{{ product.images.0.image|fix_image:base_url }}" class="card-img-top" alt="{{ product.name_uz }}" style="height: 200px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="card-img-top bg-light align-items-center justify-content-center" style="height: 200px; display: none;">
+            <i class="bi bi-image fs-1 text-muted"></i>
+        </div>
+        {% else %}
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+            <i class="bi bi-image fs-1 text-muted"></i>
+        </div>
+        {% endif %}
+
+        <!-- Discount Badge -->
+        {% if product.discount and product.discount > 0 %}
+        <span class="position-absolute top-0 start-0 m-2 badge bg-danger">-{{ product.discount }}%</span>
+        {% endif %}
+    </a>
+
+    <!-- Wishlist Button -->
+    {% if is_authenticated %}
+    <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 wishlist-btn rounded-circle"
+            data-product-id="{{ product.id }}" title="Sevimlilarga qo'shish">
+        <i class="bi bi-heart"></i>
+    </button>
+    {% endif %}
+
+    <div class="card-body">
+        <a href="{% url 'frontend:product_detail' product.id %}" class="text-decoration-none">
+            <h6 class="card-title text-dark text-truncate mb-1">{{ product.name_uz|default:product.name_en }}</h6>
+        </a>
+
+        {% if product.category %}
+        <small class="text-muted">{{ product.category.name_uz|default:product.category.name_en }}</small>
+        {% endif %}
+
+<div class="mt-2">
+    {% if product.discount and product.discount > 0 %}
+        {% with discounted_price=product.price|floatformat:0 %}
+        <span class="text-decoration-line-through text-muted small">{{ product.price|floatformat:0 }} so'm</span>
+        <br>
+        <span class="fw-bold text-accent" style="font-size: 1.1rem;">
+            {{ product.discounted_price|floatformat:0 }} so'm
+        </span>
+        {% endwith %}
+    {% else %}
+        <span class="fw-bold" style="font-size: 1.1rem;">{{ product.price|floatformat:0 }} so'm</span>
+    {% endif %}
+</div>
+
+        <!-- Rating & Stock -->
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted">
+                <i class="bi bi-star-fill text-warning"></i> {{ product.average_rank|floatformat:1|default:"0" }}
+            </small>
+            {% if product.quantity > 0 %}
+            <small class="text-success"><i class="bi bi-check-circle"></i> Mavjud</small>
+            {% else %}
+            <small class="text-danger"><i class="bi bi-x-circle"></i> Tugagan</small>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-footer bg-white border-0 pt-0">
+        <button class="btn btn-primary w-100 add-to-cart-btn"
+                data-product-id="{{ product.id }}"
+                {% if product.quantity <= 0 %}disabled{% endif %}>
+            <i class="bi bi-cart-plus"></i> Savatchaga
+        </button>
+    </div>
+</div>
